@@ -212,7 +212,6 @@ logs/
 data/*.json
 data/*.csv
 !data/example_queries.json
-outputs/
 *.pkl
 *.pickle
 
