@@ -16,7 +16,7 @@ import yaml
 import logging
 from dotenv import load_dotenv
 
-from src.autogen_orchestrator import AutoGenOrchestrator
+from src.langgraph_orchestrator import LangGraphOrchestrator
 
 # Load environment variables
 load_dotenv()
@@ -24,14 +24,6 @@ load_dotenv()
 class CLI:
     """
     Command-line interface for the research assistant.
-
-    TODO: YOUR CODE HERE
-    - Implement interactive prompt loop
-    - Display agent traces clearly
-    - Show citations and sources
-    - Indicate safety events (blocked/sanitized)
-    - Handle user commands (help, quit, clear, etc.)
-    - Format output nicely
     """
 
     def __init__(self, config_path: str = "config.yaml"):
@@ -48,11 +40,11 @@ class CLI:
         # Setup logging
         self._setup_logging()
 
-        # Initialize AutoGen orchestrator
+        # Initialize LangGraph orchestrator
         try:
-            self.orchestrator = AutoGenOrchestrator(self.config)
+            self.orchestrator = LangGraphOrchestrator(self.config)
             self.logger = logging.getLogger("cli")
-            self.logger.info("AutoGen orchestrator initialized successfully")
+            self.logger.info("LangGraph orchestrator initialized successfully")
         except Exception as e:
             self.logger = logging.getLogger("cli")
             self.logger.error(f"Failed to initialize orchestrator: {e}")
@@ -78,13 +70,6 @@ class CLI:
     async def run(self):
         """
         Main CLI loop.
-
-        TODO: YOUR CODE HERE
-        - Implement interactive loop
-        - Handle user input
-        - Process queries through orchestrator
-        - Display results
-        - Handle errors gracefully
         """
         self._print_welcome()
 
@@ -114,15 +99,15 @@ class CLI:
                 print("\n" + "=" * 70)
                 print("Processing your query...")
                 print("=" * 70)
-                
+
                 try:
                     # Process through orchestrator (synchronous call, not async)
                     result = self.orchestrator.process_query(query)
                     self.query_count += 1
-                    
+
                     # Display result
                     self._display_result(result)
-                    
+
                 except Exception as e:
                     print(f"\nError processing query: {e}")
                     logging.exception("Error processing query")
@@ -204,28 +189,36 @@ class CLI:
             print(f"  • Messages exchanged: {metadata.get('num_messages', 0)}")
             print(f"  • Sources gathered: {metadata.get('num_sources', 0)}")
             print(f"  • Agents involved: {', '.join(metadata.get('agents_involved', []))}")
+            if metadata.get("safety_events"):
+                print(f"  • Safety events: {len(metadata.get('safety_events', []))}")
 
         # Display conversation summary if verbose mode
         if self._should_show_traces():
             self._display_conversation_summary(result.get("conversation_history", []))
 
         print("=" * 70 + "\n")
-    
+
     def _extract_citations(self, result: Dict[str, Any]) -> list:
         """Extract citations/URLs from conversation history."""
         citations = []
-        
+
         for msg in result.get("conversation_history", []):
             content = msg.get("content", "")
-            
+            # Normalize content to string for regex extraction
+            if not isinstance(content, str):
+                try:
+                    content = " ".join(content) if isinstance(content, list) else str(content)
+                except Exception:
+                    content = str(content)
+
             # Find URLs in content
             import re
             urls = re.findall(r'https?://[^\s<>"{}|\\^`\[\]]+', content)
-            
+
             for url in urls:
                 if url not in citations:
                     citations.append(url)
-        
+
         return citations[:10]  # Limit to top 10
 
     def _should_show_traces(self) -> bool:
@@ -237,24 +230,29 @@ class CLI:
         """Display a summary of the agent conversation."""
         if not conversation_history:
             return
-            
+
         print("\n" + "-" * 70)
         print("🔍 CONVERSATION SUMMARY")
         print("-" * 70)
-        
+
         for i, msg in enumerate(conversation_history, 1):
             agent = msg.get("source", "Unknown")
             content = msg.get("content", "")
-            
+            if not isinstance(content, str):
+                try:
+                    content = " ".join(content) if isinstance(content, list) else str(content)
+                except Exception:
+                    content = str(content)
+
             # Truncate long content
             preview = content[:150] + "..." if len(content) > 150 else content
             preview = preview.replace("\n", " ")
-            
+
             print(f"\n{i}. {agent}:")
             print(f"   {preview}")
 
 
-def main():
+def main(argv=None):
     """Main entry point for CLI."""
     import argparse
 
@@ -267,7 +265,7 @@ def main():
         help="Path to configuration file"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Run CLI
     cli = CLI(config_path=args.config)

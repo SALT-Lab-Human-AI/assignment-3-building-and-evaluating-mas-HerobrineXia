@@ -6,13 +6,13 @@ Example usage:
     # Load config
     with open("config.yaml") as f:
         config = yaml.safe_load(f)
-    
+
     # Initialize evaluator with orchestrator
     evaluator = SystemEvaluator(config, orchestrator=my_orchestrator)
-    
+
     # Run evaluation
     report = await evaluator.evaluate_system("data/test_queries.json")
-    
+
     # Results are automatically saved to outputs/
 """
 
@@ -30,12 +30,6 @@ class SystemEvaluator:
     """
     Evaluates the multi-agent system using test queries and LLM-as-a-Judge.
 
-    TODO: YOUR CODE HERE
-    - Load test queries from file
-    - Run system on all test queries
-    - Collect and aggregate results
-    - Generate evaluation report
-    - Perform error analysis
     """
 
     def __init__(self, config: Dict[str, Any], orchestrator=None):
@@ -54,13 +48,13 @@ class SystemEvaluator:
         eval_config = config.get("evaluation", {})
         self.enabled = eval_config.get("enabled", True)
         self.max_test_queries = eval_config.get("num_test_queries", None)
-        
+
         # Initialize judge (passes config to load judge model settings and criteria)
         self.judge = LLMJudge(config)
 
         # Evaluation results
         self.results: List[Dict[str, Any]] = []
-        
+
         self.logger.info(f"SystemEvaluator initialized (enabled={self.enabled})")
 
     async def evaluate_system(
@@ -75,19 +69,12 @@ class SystemEvaluator:
 
         Returns:
             Evaluation results and statistics
-
-        TODO: YOUR CODE HERE
-        - Load test queries
-        - Run system on each query
-        - Evaluate each response
-        - Aggregate results
-        - Generate report
         """
         # Check if evaluation is enabled in config.yaml
         if not self.enabled:
             self.logger.warning("Evaluation is disabled in config.yaml")
             return {"error": "Evaluation is disabled in configuration"}
-        
+
         self.logger.info("Starting system evaluation")
 
         # Load test queries
@@ -135,14 +122,11 @@ class SystemEvaluator:
         # Run through orchestrator if available
         if self.orchestrator:
             try:
-                # Call orchestrator's process_query method
-                # TODO: YOUR CODE HERE
-                # Need to implement this in their orchestrator
+                # Call orchestrator's process_query method (sync)
                 response_data = self.orchestrator.process_query(query)
-                
-                # If process_query is async, use:
+                # If process_query is async, you can swap to:
                 # response_data = await self.orchestrator.process_query(query)
-                
+
             except Exception as e:
                 self.logger.error(f"Error processing query through orchestrator: {e}")
                 response_data = {
@@ -181,9 +165,6 @@ class SystemEvaluator:
         """
         Load test queries from JSON file.
 
-        TODO: YOUR CODE HERE
-        - Create test query dataset
-        - Load and validate queries
         """
         path_obj = Path(path)
         if not path_obj.exists():
@@ -204,11 +185,6 @@ class SystemEvaluator:
         """
         Generate evaluation report with statistics and analysis.
 
-        TODO: YOUR CODE HERE
-        - Calculate aggregate statistics
-        - Identify best/worst performing queries
-        - Analyze errors
-        - Generate visualizations (optional)
         """
         if not self.results:
             return {"error": "No results to report"}
@@ -272,10 +248,6 @@ class SystemEvaluator:
         """
         Save evaluation results to file.
 
-        TODO: YOUR CODE HERE
-        - Save detailed results
-        - Generate visualizations
-        - Create summary report
         """
         output_dir = Path("outputs")
         output_dir.mkdir(exist_ok=True)
@@ -318,21 +290,21 @@ class SystemEvaluator:
         if not self.results:
             self.logger.warning("No results to export")
             return
-        
+
         # Create output directory
         output_dir = Path(output_path).parent
         output_dir.mkdir(exist_ok=True)
-        
+
         # Format data for report
         report_data = {
             "evaluation_date": datetime.now().isoformat(),
             "total_queries": len(self.results),
             "results": self.results
         }
-        
+
         with open(output_path, 'w') as f:
             json.dump(report_data, f, indent=2)
-        
+
         self.logger.info(f"Report data exported to {output_path}")
 
 
@@ -340,7 +312,7 @@ async def example_simple_evaluation():
     """
     Example 1: Simple evaluation without orchestrator
     Tests the evaluation pipeline with mock responses
-    
+
     Usage:
         import asyncio
         from src.evaluation.evaluator import example_simple_evaluation
@@ -348,17 +320,17 @@ async def example_simple_evaluation():
     """
     import yaml
     from dotenv import load_dotenv
-    
+
     load_dotenv()
-    
+
     print("=" * 70)
     print("EXAMPLE 1: Simple Evaluation (No Orchestrator)")
     print("=" * 70)
-    
+
     # Load config
     with open("config.yaml", 'r') as f:
         config = yaml.safe_load(f)
-    
+
     # Create test queries in memory (no file needed)
     test_queries = [
         {
@@ -370,22 +342,22 @@ async def example_simple_evaluation():
             "ground_truth": "Exercise improves physical health, mental wellbeing, and reduces disease risk."
         }
     ]
-    
+
     # Save test queries temporarily
     test_file = Path("data/test_queries_example.json")
     test_file.parent.mkdir(exist_ok=True)
     with open(test_file, 'w') as f:
         json.dump(test_queries, f, indent=2)
-    
+
     # Initialize evaluator without orchestrator
     evaluator = SystemEvaluator(config, orchestrator=None)
-    
+
     print("\nRunning evaluation on test queries...")
     print("Note: Using placeholder responses since no orchestrator is connected\n")
-    
+
     # Run evaluation
     report = await evaluator.evaluate_system(str(test_file))
-    
+
     # Display results
     print("\n" + "=" * 70)
     print("EVALUATION RESULTS")
@@ -394,13 +366,13 @@ async def example_simple_evaluation():
     print(f"Successful: {report['summary']['successful']}")
     print(f"Failed: {report['summary']['failed']}")
     print(f"Overall Average Score: {report['scores']['overall_average']:.3f}\n")
-    
+
     print("Scores by Criterion:")
     for criterion, score in report['scores']['by_criterion'].items():
         print(f"  {criterion}: {score:.3f}")
-    
+
     print(f"\nDetailed results saved to outputs/")
-    
+
     # Clean up
     test_file.unlink()
 
@@ -409,7 +381,7 @@ async def example_with_orchestrator():
     """
     Example 2: Evaluation with orchestrator
     Shows how to connect the evaluator to your multi-agent system
-    
+
     Usage:
         import asyncio
         from src.evaluation.evaluator import example_with_orchestrator
@@ -417,29 +389,28 @@ async def example_with_orchestrator():
     """
     import yaml
     from dotenv import load_dotenv
-    
+
     load_dotenv()
-    
+
     print("=" * 70)
     print("EXAMPLE 2: Evaluation with Orchestrator")
     print("=" * 70)
-    
+
     # Load config
     with open("config.yaml", 'r') as f:
         config = yaml.safe_load(f)
-    
+
     # Initialize orchestrator
-    # TODO: YOUR CODE HERE
     # Replace this with their actual orchestrator
     try:
-        from src.autogen_orchestrator import AutoGenOrchestrator
-        orchestrator = AutoGenOrchestrator(config)
+        from src.langgraph_orchestrator import LangGraphOrchestrator
+        orchestrator = LangGraphOrchestrator(config)
         print("\nOrchestrator initialized successfully")
     except Exception as e:
         print(f"\nCould not initialize orchestrator: {e}")
         print("This example requires a working orchestrator implementation")
         return
-    
+
     # Create test queries
     test_queries = [
         {
@@ -447,32 +418,32 @@ async def example_with_orchestrator():
             "ground_truth": "Key principles include perceivability, operability, understandability, and robustness."
         }
     ]
-    
+
     test_file = Path("data/test_queries_orchestrator.json")
     test_file.parent.mkdir(exist_ok=True)
     with open(test_file, 'w') as f:
         json.dump(test_queries, f, indent=2)
-    
+
     # Initialize evaluator with orchestrator
     evaluator = SystemEvaluator(config, orchestrator=orchestrator)
-    
+
     print("\nRunning evaluation with real orchestrator...")
     print("This will actually query your multi-agent system\n")
-    
+
     # Run evaluation
     report = await evaluator.evaluate_system(str(test_file))
-    
+
     # Display results
     print("\n" + "=" * 70)
     print("EVALUATION RESULTS")
     print("=" * 70)
     print(f"\nTotal Queries: {report['summary']['total_queries']}")
     print(f"Overall Average Score: {report['scores']['overall_average']:.3f}\n")
-    
+
     print("Scores by Criterion:")
     for criterion, score in report['scores']['by_criterion'].items():
         print(f"  {criterion}: {score:.3f}")
-    
+
     # Show detailed result for first query
     if report['detailed_results']:
         result = report['detailed_results'][0]
@@ -482,9 +453,9 @@ async def example_with_orchestrator():
         print(f"\nQuery: {result['query']}")
         print(f"\nResponse: {result['response'][:200]}...")
         print(f"\nOverall Score: {result['evaluation']['overall_score']:.3f}")
-    
+
     print(f"\nFull results saved to outputs/")
-    
+
     # Clean up
     test_file.unlink()
 
@@ -492,13 +463,13 @@ async def example_with_orchestrator():
 # For direct execution
 if __name__ == "__main__":
     import asyncio
-    
+
     print("Running SystemEvaluator Examples\n")
-    
+
     # Run example 1
     asyncio.run(example_simple_evaluation())
-    
+
     print("\n\n")
-    
+
     # Run example 2 (if orchestrator is available)
     asyncio.run(example_with_orchestrator())

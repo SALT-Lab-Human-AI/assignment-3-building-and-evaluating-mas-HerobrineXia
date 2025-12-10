@@ -10,11 +10,6 @@ class InputGuardrail:
     """
     Guardrail for checking input safety.
 
-    TODO: YOUR CODE HERE
-    - Integrate with Guardrails AI or NeMo Guardrails
-    - Define validation rules
-    - Implement custom validators
-    - Handle different types of violations
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -26,15 +21,6 @@ class InputGuardrail:
         """
         self.config = config
 
-        # TODO: Initialize guardrail framework
-        # Example with Guardrails AI:
-        # from guardrails import Guard
-        # from guardrails.validators import ValidLength, ToxicLanguage
-        # self.guard = Guard().use_many(
-        #     ValidLength(min=10, max=1000),
-        #     ToxicLanguage(threshold=0.5)
-        # )
-
     def validate(self, query: str) -> Dict[str, Any]:
         """
         Validate input query.
@@ -44,60 +30,59 @@ class InputGuardrail:
 
         Returns:
             Validation result
-
-        TODO: YOUR CODE HERE
-        - Implement validation logic
-        - Check for toxic language
-        - Check for prompt injection attempts
-        - Check query length and format
-        - Check for off-topic queries
         """
-        violations = []
+        violations: List[Dict[str, Any]] = []
 
-        # TODO: Implement actual validation
-        # Example structure:
-        # result = self.guard.validate(query)
-        # if not result.validation_passed:
-        #     violations = result.errors
+        # Length checks
+        length_issues = self._check_length(query)
+        violations.extend(length_issues)
 
-        # Placeholder checks
-        if len(query) < 5:
-            violations.append({
-                "validator": "length",
-                "reason": "Query too short",
-                "severity": "low"
-            })
+        # Prompt injection checks
+        injection_issues = self._check_prompt_injection(query)
+        violations.extend(injection_issues)
 
-        if len(query) > 2000:
-            violations.append({
-                "validator": "length",
-                "reason": "Query too long",
-                "severity": "medium"
-            })
+        # Toxic / harmful language checks
+        toxic_issues = self._check_toxic_language(query)
+        violations.extend(toxic_issues)
+
+        # Relevance check (optional, uses configured topic if provided)
+        relevance_issues = self._check_relevance(query)
+        violations.extend(relevance_issues)
 
         return {
             "valid": len(violations) == 0,
             "violations": violations,
-            "sanitized_input": query  # Could be modified version
+            "sanitized_input": query  # Could be modified for stricter sanitization
         }
 
     def _check_toxic_language(self, text: str) -> List[Dict[str, Any]]:
         """
         Check for toxic/harmful language.
 
-        TODO: YOUR CODE HERE Implement toxicity detection
         """
-        violations = []
-        # Implement toxicity check
+        violations: List[Dict[str, Any]] = []
+        # Simple keyword-based filter; for production replace with a classifier
+        toxic_keywords = [
+            "kill", "hate", "terrorist", "attack", "bomb",
+            "racist", "sexist", "suicide", "self-harm",
+            "sex", "porn", "pornography", "nsfw", "explicit", "adult content", "child sexual",
+        ]
+        lowered = text.lower()
+        for keyword in toxic_keywords:
+            if keyword in lowered:
+                violations.append({
+                    "validator": "toxic_language",
+                    "reason": f"Potentially harmful intent detected: '{keyword}'",
+                    "severity": "high"
+                })
         return violations
 
     def _check_prompt_injection(self, text: str) -> List[Dict[str, Any]]:
         """
         Check for prompt injection attempts.
 
-        TODO: YOUR CODE HERE Implement prompt injection detection
         """
-        violations = []
+        violations: List[Dict[str, Any]] = []
         # Check for common prompt injection patterns
         injection_patterns = [
             "ignore previous instructions",
@@ -105,6 +90,10 @@ class InputGuardrail:
             "forget everything",
             "system:",
             "sudo",
+            "assistant:",
+            "you are now",
+            "override",
+            "forget prior rules"
         ]
 
         for pattern in injection_patterns:
@@ -121,8 +110,32 @@ class InputGuardrail:
         """
         Check if query is relevant to the system's purpose.
 
-        TODO: YOUR CODE HERE Implement relevance checking
         """
-        violations = []
-        # Check if query is about HCI research (or configured topic)
+        violations: List[Dict[str, Any]] = []
+        topic = self.config.get("system", {}).get("topic")
+        if topic:
+            # Basic topicality check: ensure some overlap with configured topic keywords
+            if topic.lower() not in query.lower():
+                violations.append({
+                    "validator": "relevance",
+                    "reason": f"Query may be off-topic (expected topic includes '{topic}')",
+                    "severity": "low"
+                })
+        return violations
+
+    def _check_length(self, text: str) -> List[Dict[str, Any]]:
+        """Check for overly short or long inputs."""
+        violations: List[Dict[str, Any]] = []
+        if len(text.strip()) < 5:
+            violations.append({
+                "validator": "length",
+                "reason": "Query too short",
+                "severity": "low"
+            })
+        if len(text) > 2000:
+            violations.append({
+                "validator": "length",
+                "reason": "Query too long",
+                "severity": "medium"
+            })
         return violations

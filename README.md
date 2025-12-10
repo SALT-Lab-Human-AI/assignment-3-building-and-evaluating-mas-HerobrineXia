@@ -48,6 +48,13 @@ This template provides a starting point for building a multi-agent research assi
 └── main.py                 # Main entry point
 ```
 
+### Implementation Notes (current)
+
+- The system now runs on **LangGraph** (`src/langgraph_orchestrator.py`) with Planner, Researcher, Writer, and Critic agents in `src/agents/`.
+- Safety uses the heuristic **SafetyManager** (`src/guardrails/safety_manager.py`) with keyword filters covering weapons/violence, self-harm, and adult/explicit content; NeMo is not required.
+- Evaluation uses **dual LLM judges** (`src/evaluation/judge.py`), averaging criterion scores across the judge prompts defined in `config.yaml` under `evaluation.judges`.
+- Run modes: `python main.py --mode cli`, `python main.py --mode web`, and `python main.py --mode evaluate` (reports saved to `outputs/`).
+
 ## Setup Instructions
 
 ### 1. Prerequisites
@@ -192,15 +199,15 @@ This template provides the structure - you need to implement the core functional
 ### Phase 1: Core Agent Implementation
 
 1. **Implement Agent Logic** (in `src/agents/`)
-   - [ ] Complete `planner_agent.py` - Integrate LLM to break down queries
-   - [ ] Complete `researcher_agent.py` - Integrate search APIs (Tavily, Semantic Scholar)
-   - [ ] Complete `critic_agent.py` - Implement quality evaluation logic
-   - [ ] Complete `writer_agent.py` - Implement synthesis with proper citations
+   - [x] Complete `planner_agent.py` - Integrate LLM to break down queries
+   - [x] Complete `researcher_agent.py` - Integrate search APIs (Tavily, Semantic Scholar)
+   - [x] Complete `critic_agent.py` - Implement quality evaluation logic
+   - [x] Complete `writer_agent.py` - Implement synthesis with proper citations
 
 2. **Implement Tools** (in `src/tools/`)
-   - [ ] Complete `web_search.py` - Integrate Tavily or Brave API
-   - [ ] Complete `paper_search.py` - Integrate Semantic Scholar API
-   - [ ] Complete `citation_tool.py` - Implement APA citation formatting
+   - [x] Complete `web_search.py` - Integrate Tavily or Brave API
+   - [x] Complete `paper_search.py` - Integrate Semantic Scholar API
+   - [x] Complete `citation_tool.py` - Implement APA citation formatting
 
 ### Phase 2: Orchestration
 
@@ -208,39 +215,39 @@ Choose your preferred framework to implement the multi-agent system. The current
 
 
 3. **Update `orchestrator.py`**
-   - Integrate your chosen framework
-   - Implement the workflow: plan → research → write → critique → revise
-   - Add error handling
+   - [x] Integrate your chosen framework
+   - [x] Implement the workflow: plan → research → write → critique → revise
+   - [x] Add error handling
 
 ### Phase 3: Safety Guardrails
 
 4. **Implement Guardrails** (in `src/guardrails/`)
-   - [ ] Choose framework: Guardrails AI or NeMo Guardrails
-   - [ ] Define safety policies in `safety_manager.py`
-   - [ ] Implement input validation in `input_guardrail.py`
-   - [ ] Implement output validation in `output_guardrail.py`
-   - [ ] Set up safety event logging
+   - [x] Choose framework: Guardrails AI or NeMo Guardrails
+   - [x] Define safety policies in `safety_manager.py`
+   - [x] Implement input validation in `input_guardrail.py`
+   - [x] Implement output validation in `output_guardrail.py`
+   - [x] Set up safety event logging
 
 ### Phase 4: Evaluation
 
 5. **Implement LLM-as-a-Judge** (in `src/evaluation/`)
-   - [ ] Complete `judge.py` - Integrate LLM API for judging
-   - [ ] Define evaluation rubrics for each criterion
-   - [ ] Implement score parsing and aggregation
+   - [x] Complete `judge.py` - Integrate an OpenAI-compatible LLM for judging (models.judge in config)
+   - [x] Define evaluation rubrics for each criterion (config.evaluation.criteria)
+   - [x] Implement score parsing and aggregation
 
 6. **Create Test Dataset**
-   - [ ] Add more test queries to `data/example_queries.json`
-   - [ ] Define expected outputs or ground truths where possible
-   - [ ] Cover different query types and topics
+   - [x] Add more test queries to `data/example_queries.json`
+   - [x] Define expected outputs or ground truths where possible
+   - [x] Cover different query types and topics
 
 ### Phase 5: User Interface
 
 7. **Complete UI** (choose one or both)
-   - [ ] Finish CLI implementation in `src/ui/cli.py`
-   - [ ] Finish web UI in `src/ui/streamlit_app.py`
-   - [ ] Display agent traces clearly
-   - [ ] Show citations and sources
-   - [ ] Indicate safety events
+   - [x] Finish CLI implementation in `src/ui/cli.py`
+   - [x] Finish web UI in `src/ui/streamlit_app.py`
+   - [x] Display agent traces clearly
+   - [x] Show citations and sources
+   - [x] Indicate safety events
 
 ## Running the System
 

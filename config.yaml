@@ -3,8 +3,8 @@
 
 system:
   name: "Multi-Agent Research Assistant"
-  topic: "HCI Research"  # Change this to your chosen topic
-  max_iterations: 10
+  topic: "Human-AI Collaboration"  # Change this to your chosen topic
+  max_iterations: 100
   timeout_seconds: 300
 
 agents:
@@ -13,7 +13,16 @@ agents:
     enabled: true
     # Custom system prompt (optional - leave empty to use default)
     # If provided, ensure it includes the handoff signal: "PLAN COMPLETE"
-    system_prompt: ""  # Empty = use default prompt
+    system_prompt: |
+      You are the Planner. Break the user query into a concise, actionable research plan the team can execute.
+
+      When you receive a query:
+      1) List 3-6 focused research steps (what to find, why it matters, and which sources to target).
+      2) Propose concrete search strings for the Researcher (both web and academic).
+      3) Call out any clarifications or constraints that matter (timeframe, quality bar, domain limits).
+      4) End with a short success checklist the Writer should cover.
+
+      Do not conduct research or call tools. Keep the plan brief and numbered. End your message with the handoff signal: PLAN COMPLETE.
     # Example custom prompt:
     # system_prompt: |
     #   You are an expert research planner specializing in HCI topics.
@@ -26,8 +35,26 @@ agents:
     enabled: true
     # Custom system prompt (optional - leave empty to use default)
     # If provided, ensure it mentions tools and includes: "RESEARCH COMPLETE"
-    system_prompt: ""  # Empty = use default prompt
-    max_sources: 10
+    system_prompt: |
+      You are the Researcher. Use the provided tools to gather concise, high-quality evidence.
+
+      Tools available:
+      - web_search(query, provider="tavily", max_results=5) for general sources
+      - paper_search(query, max_results=10, year_from=None) for academic papers
+
+      Workflow:
+      1) Prioritize authoritative, recent sources (last 5 years) unless classics are needed.
+      2) Run targeted searches based on the Planner’s guidance; prefer multiple, smaller queries.
+      3) For each source, capture key claim/data + minimal citation (title/author/year + URL).
+      4) Deduplicate, keep it concise, avoid speculation or fabrication.
+
+      Output format:
+      - Bullet or numbered list of findings with in-line source tags like [Web1], [Paper2].
+      - Provide a compact source list at the end mapping tags to titles/URLs.
+      - If tools are unavailable or return nothing, state that explicitly.
+
+      Finish with the handoff signal: RESEARCH COMPLETE.
+    max_sources: 5
     # Example custom prompt:
     # system_prompt: |
     #   You are a research specialist in HCI and UX design.
@@ -40,7 +67,17 @@ agents:
     enabled: true
     # Custom system prompt (optional - leave empty to use default)
     # If provided, ensure it includes: "DRAFT COMPLETE"
-    system_prompt: ""  # Empty = use default prompt
+    system_prompt: |
+      You are the Writer. Synthesize the team’s findings into a coherent, well-cited answer.
+
+      Writing guidance:
+      1) Start with a 2-3 sentence overview that directly answers the query.
+      2) Organize the body with clear headings and short paragraphs; avoid fluff.
+      3) Cite evidence inline using bracketed tags that match the Researcher’s tags (e.g., [Web1], [Paper2]).
+      4) Paraphrase and synthesize across multiple sources; avoid verbatim copying.
+      5) Include a brief "References" list mapping tags to titles/URLs.
+
+      Be concise, factual, and topic-focused. End with the handoff signal: DRAFT COMPLETE.
     # Example custom prompt:
     # system_prompt: |
     #   You are an academic writer specializing in HCI research.
@@ -53,7 +90,19 @@ agents:
     enabled: true
     # Custom system prompt (optional - leave empty to use default)
     # If provided, ensure it includes: "APPROVED - RESEARCH COMPLETE" or "NEEDS REVISION"
-    system_prompt: ""  # Empty = use default prompt
+    system_prompt: |
+      You are the Critic. Evaluate the latest draft and decide whether it is ready.
+
+      Check:
+      - Relevance: Directly answers the query and follows the plan.
+      - Evidence: Credible sources, inline tags present, references included.
+      - Completeness: Major aspects covered; no obvious gaps.
+      - Accuracy & Safety: No contradictions, hallucinations, or unsafe content.
+      - Clarity: Clear structure and concise wording.
+
+      If the draft is acceptable, respond with a short approval and include the token: APPROVED - RESEARCH COMPLETE. TERMINATE
+      If it needs work, respond with a concise list of fixes and include the token: NEEDS REVISION
+      Keep feedback specific and actionable.
     # Example custom prompt:
     # system_prompt: |
     #   You are a peer reviewer for HCI research.
@@ -64,16 +113,14 @@ agents:
 models:
   # Default model for agents (Groq)
   default:
-    provider: "vllm"
-    name: "openai/gpt-oss-20b"
-    temperature: 0.7
-    max_tokens: 2048
+    provider: "openai"
+    name: "gpt-5-mini"
+    max_tokens: 4096
 
   # Judge model for evaluation
   judge:
-    provider: "vllm"
-    name: "openai/gpt-oss-20b"
-    temperature: 0.3
+    provider: "openai"
+    name: "gpt-5-mini"
     max_tokens: 1024
 
 tools:
@@ -83,7 +130,7 @@ tools:
     max_results: 5
 
   paper_search:
-    enabled: true
+    enabled: false
     provider: "semantic_scholar"
     max_results: 10
 
@@ -92,7 +139,7 @@ tools:
 
 safety:
   enabled: true
-  framework: "guardrails"  # or "nemo_guardrails"
+  framework: "heuristic"
   log_events: true
 
   # Define prohibited categories
@@ -101,6 +148,20 @@ safety:
     - "personal_attacks"
     - "misinformation"
     - "off_topic_queries"
+  prohibited_keywords:
+    - hack
+    - attack
+    - exploit
+    - bypass
+    - weapon
+    - gun
+    - bomb
+    - sex
+    - porn
+    - adult
+    - nsfw
+    - explicit
+    - child sexual
 
   # Response strategies
   on_violation:
@@ -110,6 +171,11 @@ safety:
 evaluation:
   enabled: true
   num_test_queries: 10
+  judges:
+    - name: "factual_strict"
+      system_prompt: "You are a strict evaluator focused on factual accuracy and evidence. Respond with JSON."
+    - name: "user_value"
+      system_prompt: "You are a pragmatic evaluator focused on usefulness, clarity, and safety. Respond with JSON."
 
   # Judge criteria
   criteria:
@@ -138,3 +204,6 @@ logging:
   file: "logs/system.log"
   safety_log: "logs/safety_events.log"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+ui:
+  verbose: true  # Enable verbose traces in CLI

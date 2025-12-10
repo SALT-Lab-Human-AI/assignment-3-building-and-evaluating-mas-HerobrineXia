@@ -19,7 +19,7 @@ from datetime import datetime
 from typing import Dict, Any
 from dotenv import load_dotenv
 
-from src.autogen_orchestrator import AutoGenOrchestrator
+from src.langgraph_orchestrator import LangGraphOrchestrator
 
 # Load environment variables
 load_dotenv()
@@ -43,7 +43,7 @@ def initialize_session_state():
         config = load_config()
         # Initialize AutoGen orchestrator
         try:
-            st.session_state.orchestrator = AutoGenOrchestrator(config)
+            st.session_state.orchestrator = LangGraphOrchestrator(config)
         except Exception as e:
             st.error(f"Failed to initialize orchestrator: {e}")
             st.session_state.orchestrator = None
@@ -58,15 +58,15 @@ def initialize_session_state():
 async def process_query(query: str) -> Dict[str, Any]:
     """
     Process a query through the orchestrator.
-    
+
     Args:
         query: Research query to process
-        
+
     Returns:
         Result dictionary with response, citations, and metadata
     """
     orchestrator = st.session_state.orchestrator
-    
+
     if orchestrator is None:
         return {
             "query": query,
@@ -75,34 +75,34 @@ async def process_query(query: str) -> Dict[str, Any]:
             "citations": [],
             "metadata": {}
         }
-    
+
     try:
         # Process query through AutoGen orchestrator
         result = orchestrator.process_query(query)
-        
+
         # Check for errors
         if "error" in result:
             return result
-        
+
         # Extract citations from conversation history
         citations = extract_citations(result)
-        
+
         # Extract agent traces for display
         agent_traces = extract_agent_traces(result)
-        
+
         # Format metadata
         metadata = result.get("metadata", {})
         metadata["agent_traces"] = agent_traces
         metadata["citations"] = citations
         metadata["critique_score"] = calculate_quality_score(result)
-        
+
         return {
             "query": query,
             "response": result.get("response", ""),
             "citations": citations,
             "metadata": metadata
         }
-        
+
     except Exception as e:
         return {
             "query": query,
@@ -116,78 +116,73 @@ async def process_query(query: str) -> Dict[str, Any]:
 def extract_citations(result: Dict[str, Any]) -> list:
     """Extract citations from research result."""
     citations = []
-    
+
     # Look through conversation history for citations
     for msg in result.get("conversation_history", []):
         content = msg.get("content", "")
-        
+
         # Find URLs in content
         import re
         urls = re.findall(r'https?://[^\s<>"{}|\\^`\[\]]+', content)
-        
+
         # Find citation patterns like [Source: Title]
         citation_patterns = re.findall(r'\[Source: ([^\]]+)\]', content)
-        
+
         for url in urls:
             if url not in citations:
                 citations.append(url)
-        
+
         for citation in citation_patterns:
             if citation not in citations:
                 citations.append(citation)
-    
+
     return citations[:10]  # Limit to top 10
 
 
 def extract_agent_traces(result: Dict[str, Any]) -> Dict[str, list]:
     """Extract agent execution traces from conversation history."""
     traces = {}
-    
-    for msg in result.get("conversation_history", []):
+
+    for idx, msg in enumerate(result.get("conversation_history", []), 1):
         agent = msg.get("source", "Unknown")
-        content = msg.get("content", "")[:200]  # First 200 chars
-        
+        content = msg.get("content", "")
+
         if agent not in traces:
             traces[agent] = []
-        
+
         traces[agent].append({
+            "step": idx,
             "action_type": "message",
             "details": content
         })
-    
+
     return traces
 
 
 def calculate_quality_score(result: Dict[str, Any]) -> float:
     """Calculate a quality score based on various factors."""
     score = 5.0  # Base score
-    
+
     metadata = result.get("metadata", {})
-    
+
     # Add points for sources
     num_sources = metadata.get("num_sources", 0)
     score += min(num_sources * 0.5, 2.0)
-    
+
     # Add points for critique
     if metadata.get("critique"):
         score += 1.0
-    
+
     # Add points for conversation length (indicates thorough discussion)
     num_messages = metadata.get("num_messages", 0)
     score += min(num_messages * 0.1, 2.0)
-    
+
     return min(score, 10.0)  # Cap at 10
 
 
 def display_response(result: Dict[str, Any]):
     """
     Display query response.
-
-    TODO: YOUR CODE HERE
-    - Format response nicely
-    - Show citations with links
-    - Display sources
-    - Show safety events if any
     """
     # Check for errors
     if "error" in result:
@@ -209,23 +204,28 @@ def display_response(result: Dict[str, Any]):
     # Display metadata
     metadata = result.get("metadata", {})
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Sources Used", metadata.get("num_sources", 0))
     with col2:
         score = metadata.get("critique_score", 0)
         st.metric("Quality Score", f"{score:.2f}")
+    with col3:
+        st.metric("Messages", metadata.get("num_messages", 0))
 
     # Safety events
     safety_events = metadata.get("safety_events", [])
     if safety_events:
         with st.expander("⚠️ Safety Events", expanded=True):
             for event in safety_events:
-                event_type = event.get("type", "unknown")
-                violations = event.get("violations", [])
-                st.warning(f"{event_type.upper()}: {len(violations)} violation(s) detected")
-                for violation in violations:
-                    st.text(f"  • {violation.get('reason', 'Unknown')}")
+                if isinstance(event, dict):
+                    event_type = event.get("type", "unknown")
+                    violations = event.get("violations", [])
+                    st.warning(f"{event_type.upper()}: {len(violations)} violation(s) detected")
+                    for violation in violations:
+                        st.text(f"  • {violation.get('reason', 'Unknown')}")
+                else:
+                    st.warning(str(event))
 
     # Agent traces
     if st.session_state.show_traces:
@@ -237,19 +237,16 @@ def display_response(result: Dict[str, Any]):
 def display_agent_traces(traces: Dict[str, Any]):
     """
     Display agent execution traces.
-
-    TODO: YOUR CODE HERE
-    - Format traces nicely
-    - Show agent workflow
-    - Display timing information
     """
     with st.expander("🔍 Agent Traces", expanded=False):
         for agent_name, actions in traces.items():
             st.markdown(f"**{agent_name.upper()}**")
             for action in actions:
+                step = action.get("step", "")
                 action_type = action.get("action_type", "unknown")
-                details = action.get("details", {})
-                st.text(f"  → {action_type}: {details}")
+                details = action.get("details", "")
+                preview = details if len(details) <= 500 else details[:500] + "...[truncated]"
+                st.markdown(f"- [{step}] *{action_type}*: {preview}")
 
 
 def display_sidebar():
@@ -273,9 +270,14 @@ def display_sidebar():
 
         st.title("📊 Statistics")
 
-        # TODO: Get actual statistics
-        st.metric("Total Queries", len(st.session_state.history))
-        st.metric("Safety Events", 0)  # TODO: Get from safety manager
+        total_queries = len(st.session_state.history)
+        total_safety_events = sum(
+            len(item.get("result", {}).get("metadata", {}).get("safety_events", []))
+            for item in st.session_state.history
+        )
+
+        st.metric("Total Queries", total_queries)
+        st.metric("Safety Events", total_safety_events)
 
         st.divider()
 
@@ -327,11 +329,20 @@ def main():
     col1, col2 = st.columns([2, 1])
 
     with col1:
+        # Seed query from session state if set (e.g., example button)
+        if "query_text" not in st.session_state:
+            st.session_state.query_text = ""
+        if "example_query" in st.session_state:
+            st.session_state.query_text = st.session_state.example_query
+            del st.session_state.example_query
+
         # Query input
         query = st.text_area(
             "Enter your research query:",
             height=100,
-            placeholder="e.g., What are the latest developments in explainable AI for novice users?"
+            placeholder="e.g., What are the latest developments in explainable AI for novice users?",
+            value=st.session_state.query_text,
+            key="query_text_area"
         )
 
         # Submit button
@@ -368,13 +379,8 @@ def main():
 
         for example in examples:
             if st.button(example, use_container_width=True):
-                st.session_state.example_query = example
+                st.session_state.query_text = example
                 st.rerun()
-
-        # If example was clicked, populate the text area
-        if 'example_query' in st.session_state:
-            st.info(f"Example query selected: {st.session_state.example_query}")
-            del st.session_state.example_query
 
         st.divider()
 
@@ -391,8 +397,25 @@ def main():
     if st.session_state.show_safety_log:
         st.divider()
         st.markdown("### 🛡️ Safety Event Log")
-        # TODO: Display safety events from safety manager
-        st.info("No safety events recorded.")
+        safety_events = []
+        # Collect safety events from history metadata if present
+        for item in st.session_state.history:
+            meta = item.get("result", {}).get("metadata", {})
+            events = meta.get("safety_events", [])
+            safety_events.extend(events)
+
+        if not safety_events:
+            st.info("No safety events recorded.")
+        else:
+            for idx, event in enumerate(safety_events, 1):
+                if isinstance(event, dict):
+                    event_type = event.get("type", "unknown")
+                    violations = event.get("violations", [])
+                    st.warning(f"{idx}. {event_type.upper()} - {len(violations)} violation(s)")
+                    for violation in violations:
+                        st.text(f"   • {violation.get('reason', 'Unknown')}")
+                else:
+                    st.warning(f"{idx}. {str(event)}")
 
 
 if __name__ == "__main__":
