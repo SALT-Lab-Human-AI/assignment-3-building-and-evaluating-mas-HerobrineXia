@@ -19,13 +19,11 @@
 \maketitle
 
 \begin{abstract}
-A LangGraph-based multi-agent research assistant is implemented to plan, gather evidence, write, and critique answers for HCI-oriented queries.
-Four agents (Planner, Researcher, Writer, Critic) and an orchestrator loop Writer $\leftrightarrow$ Critic until approval or a revision budget is reached.
-Web search via Tavily is enabled; paper search (Semantic Scholar) is optional and disabled by default.
-Heuristic safety guardrails for weapons/violence, self-harm, and adult/sexual content refuse unsafe outputs and log events.
-Evaluation uses dual LLM judges with weighted criteria (relevance, evidence quality, factual accuracy, safety compliance, clarity), run reproducibly via CLI.
-On example queries, the system produces cited summaries with agent traces; main issues are length overruns (empty generations) and occasional safety blocks on quoted sensitive terms.
-Future work includes classifier-based safety, better context budgeting to avoid truncation, and broader evaluation with human review.
+This work presents a LangGraph-based multi-agent research assistant for HCI-oriented queries, with four coordinated roles (Planner, Researcher, Writer, Critic) and a looped Writer--Critic revision cycle.
+Web search (Tavily) is enabled by default, paper search (Semantic Scholar) remains optional, and heuristic safety guardrails refuse unsafe content across weapons/violence, self-harm, and adult/sexual categories.
+Evaluation uses dual LLM judges and weighted criteria (relevance, evidence quality, factual accuracy, safety compliance, clarity) on a 10-query set.
+With an increased writer token budget (8192), the latest run achieves overall 0.86, relevance 0.99, evidence quality 0.70, factual accuracy 0.72, safety 1.00, and clarity 0.96.
+Remaining gaps are evidence depth and context-budget robustness; future work targets richer sourcing, smarter budgeting, and classifier-based safety.
 \end{abstract}
 
 \section{System Design and Implementation}
