@@ -45,7 +45,7 @@ Deployment links: Streamlit demo at \url{https://herobrinexia.streamlit.app/}; c
 The LangGraph flow begins at Planner (entry node), then moves to Researcher, then Writer.
 The Critic evaluates the Writer draft; if the Critic returns ``NEEDS REVISION'', the graph loops back to Writer with the latest draft and critic feedback.
 If the Critic returns ``APPROVED - RESEARCH COMPLETE. TERMINATE'', the flow terminates and the orchestrator assembles the final response.
-The graph enforces a revision budget (configurable), and the orchestrawetor adds metadata (citations, safety events, safety violations) before returning to CLI/Streamlit.
+The graph enforces a revision budget (configurable), and the orchestrator adds metadata (citations, safety events, safety violations) before returning to CLI/Streamlit.
 
 \begin{figure}[h]
 \centering
@@ -78,6 +78,7 @@ In the UI, refusals present a user-facing safety message and list triggered cate
 Example batch evaluation uses \texttt{data/example\_queries.json} (diverse HCI/AI queries; more can be added).
 Paper search is optional; web search remains enabled.
 Command: \texttt{python main.py --mode evaluate --config config.yaml}; outputs to \texttt{outputs/} (JSON + summary txt).
+Artifacts: full per-query evaluations with responses and judge scores are stored in \texttt{outputs/} (e.g., \texttt{outputs/evaluation\_20251210\_205339.json} and the corresponding summary TXT); they contain agent outputs, citations, and safety metadata.
 
 \subsection{Judge Prompts and Metrics}
 Dual judges are configured in \texttt{evaluation.judges}.

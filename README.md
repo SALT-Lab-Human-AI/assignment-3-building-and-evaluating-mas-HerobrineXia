@@ -84,7 +84,9 @@ Overall flow of Planner → Researcher → Writer ↔ Critic with termination on
 - Ensure `OPENAI_API_KEY` is set; paper_search is optional/disabled by default.
 
 ### Saved Artifacts (examples)
-- Full evaluation run: `outputs/evaluation_20251210_205339.json` (+ summary txt).
+- Full per-query evaluation: `outputs/evaluation_20251210_205339.json` (with summary `outputs/evaluation_summary_20251210_205339.txt`).
+- Prior runs: `outputs/evaluation_20251210_143240.json`, `outputs/evaluation_20251210_173219.json`.
+- Raw agent outputs and final answers are embedded in these evaluation JSON files (use as sample session artifacts).
 - Example screenshots: see `img/` section above.
 - Agent traces and safety events are visible in the UI; terminal/log traces are written to `logs/system.log` (UTF-8).
 
