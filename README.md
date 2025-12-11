@@ -70,6 +70,28 @@ Agent execution trace to inspect each step’s output.
 ![Safety Block](img/Safe%20Guard%20Blocking.jpg)
 Safety block example showing a refusal when a policy is triggered.
 
+![LangGraph Workflow](img/langgraph-workflow.png)
+Overall flow of Planner → Researcher → Writer ↔ Critic with termination on approval or revision budget.
+
+### Quickstart Demo (end-to-end)
+- Command: `python main.py --mode web` then enter a query in the Web UI; or `python main.py --mode cli --config config.yaml` for CLI.
+- Expected: planner/researcher/writer/critic run, final answer with inline citations, safety status in metadata. Screenshots above were produced from these runs.
+
+### Evaluation (LLM-as-a-Judge)
+- Command: `python main.py --mode evaluate --config config.yaml`.
+- Uses dual judges (config `evaluation.judges`) and writes reports to `outputs/` (e.g., `outputs/evaluation_20251210_205339.json` and summary txt).
+- Latest run (2025-12-10): overall 0.860; relevance 0.988; evidence_quality 0.703; factual_accuracy 0.718; safety_compliance 1.000; clarity 0.957 (10 queries).
+- Ensure `OPENAI_API_KEY` is set; paper_search is optional/disabled by default.
+
+### Saved Artifacts (examples)
+- Full evaluation run: `outputs/evaluation_20251210_205339.json` (+ summary txt).
+- Example screenshots: see `img/` section above.
+- Agent traces and safety events are visible in the UI; terminal/log traces are written to `logs/system.log` (UTF-8).
+
+### Safety Policies (heuristic)
+- Categories enforced: weapons/violence/explosives, self-harm/suicide, adult/sexual content (including CSAM), and porn/nsfw.
+- Behavior: unsafe outputs are refused with the configured message (`safety.on_violation.action: refuse`); safety events are logged and shown in the UI when triggered.
+
 ## Setup Instructions
 
 ### 1. Prerequisites

@@ -217,3 +217,13 @@ data/*.csv
 
 # Pre-commit
 .pre-commit-cache/
+
+# latex compiler artifacts
+*.aux
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.xdv
