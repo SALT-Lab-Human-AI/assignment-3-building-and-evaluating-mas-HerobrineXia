@@ -63,9 +63,27 @@ class InputGuardrail:
         violations: List[Dict[str, Any]] = []
         # Simple keyword-based filter; for production replace with a classifier
         toxic_keywords = [
-            "kill", "hate", "terrorist", "attack", "bomb",
-            "racist", "sexist", "suicide", "self-harm",
-            "sex", "porn", "pornography", "nsfw", "explicit", "adult content", "child sexual",
+            "kill",
+            "hate",
+            "terrorist",
+            "bomb",
+            "grenade",
+            "explosive",
+            "weapon",
+            "gun",
+            "firearm",
+            "racist",
+            "sexist",
+            "suicide",
+            "self-harm",
+            "porn",
+            "pornography",
+            "adult content",
+            "nsfw",
+            "sexual content",
+            "explicit sexual content",
+            "child sexual abuse material",
+            "csam",
         ]
         lowered = text.lower()
         for keyword in toxic_keywords:

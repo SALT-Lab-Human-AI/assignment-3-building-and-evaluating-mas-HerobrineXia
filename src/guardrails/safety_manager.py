@@ -23,6 +23,7 @@ class SafetyManager:
         self.config = config
         self.enabled = config.get("enabled", True)
         self.log_events = config.get("log_events", True)
+        self.debug = config.get("debug", False)
         self.logger = logging.getLogger("safety")
 
         # Safety event log
@@ -33,42 +34,59 @@ class SafetyManager:
             "prohibited_categories",
             ["harmful_content", "personal_attacks", "misinformation", "off_topic_queries"],
         )
-        self.prohibited_keywords = config.get(
-            "prohibited_keywords",
-            [
-                "hack",
-                "attack",
-                "exploit",
-                "bypass",
-                "weapon",
-                "gun",
-                "bomb",
-                "sex",
-                "porn",
-                "adult",
-                "nsfw",
-                "explicit",
-                "child sexual",
-            ],
-        )
-        self.harmful_output_keywords = config.get(
-            "harmful_output_keywords",
-            [
-                "violent",
-                "harmful",
-                "dangerous",
-                "attack",
-                "weapon",
-                "gun",
-                "bomb",
-                "sex",
-                "porn",
-                "adult",
-                "nsfw",
-                "explicit",
-                "child sexual",
-            ],
-        )
+        default_input = [
+            "hack",
+            "exploit",
+            "bypass",
+            "weapon",
+            "gun",
+            "firearm",
+            "ammunition",
+            "shoot",
+            "grenade",
+            "explosive",
+            "bomb",
+            "knife",
+            "suicide",
+            "self-harm",
+            "porn",
+            "pornography",
+            "adult content",
+            "nsfw",
+            "sexual content",
+            "explicit sexual content",
+            "child sexual abuse material",
+            "csam",
+        ]
+        default_output = [
+            "violent",
+            "harmful",
+            "dangerous",
+            "weapon",
+            "gun",
+            "firearm",
+            "ammunition",
+            "shoot",
+            "grenade",
+            "explosive",
+            "bomb",
+            "knife",
+            "suicide",
+            "self-harm",
+            "porn",
+            "pornography",
+            "adult content",
+            "nsfw",
+            "sexual content",
+            "explicit sexual content",
+            "child sexual abuse material",
+            "csam",
+        ]
+        # Allow config to override or extend
+        cfg_inputs = config.get("prohibited_keywords", [])
+        cfg_outputs = config.get("harmful_output_keywords", [])
+        self.prohibited_keywords = list({k.lower(): k for k in (default_input + cfg_inputs)}.keys())
+        self.harmful_output_keywords = list({k.lower(): k for k in (default_output + cfg_outputs)}.keys())
 
         # Violation response strategy
         self.on_violation = config.get("on_violation", {})
@@ -80,6 +98,8 @@ class SafetyManager:
 
         violations = self._heuristic_input_checks(query)
         is_safe = len(violations) == 0
+        if self.debug:
+            self.logger.info("Input safety check: safe=%s violations=%s", is_safe, violations)
 
         if not is_safe and self.log_events:
             self._log_safety_event("input", query, violations, is_safe)
@@ -95,6 +115,8 @@ class SafetyManager:
 
         violations = self._heuristic_output_checks(response, sources)
         is_safe = len(violations) == 0
+        if self.debug:
+            self.logger.info("Output safety check: safe=%s violations=%s", is_safe, violations)
 
         if not is_safe and self.log_events:
             self._log_safety_event("output", response, violations, is_safe)
@@ -133,7 +155,7 @@ class SafetyManager:
             "content_preview": content[:100] + "..." if len(content) > 100 else content,
         }
         self.safety_events.append(event)
-        self.logger.warning(f"Safety event: {event_type} - safe={is_safe}")
+        self.logger.warning("Safety event: type=%s safe=%s violations=%s", event_type, is_safe, violations)
 
         log_file = self.config.get("safety_log_file")
         if log_file and self.log_events:
@@ -166,6 +188,8 @@ class SafetyManager:
         violations: List[Dict[str, Any]] = []
         for keyword in self.prohibited_keywords:
             if re.search(rf"\b{re.escape(keyword)}\b", query, flags=re.IGNORECASE):
+                if self.debug:
+                    self.logger.info("Input keyword hit: %s", keyword)
                 violations.append(
                     {
                         "category": "potentially_harmful",
@@ -180,7 +204,10 @@ class SafetyManager:
     ) -> List[Dict[str, Any]]:
         violations: List[Dict[str, Any]] = []
         for keyword in self.harmful_output_keywords:
-            if keyword.lower() in response.lower():
+            # Use word-boundary style match to reduce false positives (e.g., "begun" vs "gun")
+            if re.search(rf"\b{re.escape(keyword)}\b", response, flags=re.IGNORECASE):
+                if self.debug:
+                    self.logger.info("Output keyword hit: %s", keyword)
                 violations.append(
                     {
                         "validator": "harmful_content",

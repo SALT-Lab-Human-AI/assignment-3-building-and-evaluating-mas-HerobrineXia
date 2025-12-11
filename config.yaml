@@ -115,7 +115,7 @@ models:
   default:
     provider: "openai"
     name: "gpt-5-mini"
-    max_tokens: 4096
+    max_tokens: 8192
 
   # Judge model for evaluation
   judge:
@@ -141,6 +141,7 @@ safety:
   enabled: true
   framework: "heuristic"
   log_events: true
+  debug: true
 
   # Define prohibited categories
   prohibited_categories:
@@ -150,18 +151,17 @@ safety:
     - "off_topic_queries"
   prohibited_keywords:
     - hack
-    - attack
     - exploit
     - bypass
     - weapon
     - gun
     - bomb
-    - sex
     - porn
-    - adult
     - nsfw
-    - explicit
-    - child sexual
+    - sexual content
+    - explicit sexual content
+    - adult content
+    - child sexual abuse material
 
   # Response strategies
   on_violation:
@@ -200,7 +200,7 @@ evaluation:
       description: "Clarity and organization of response"
 
 logging:
-  level: "INFO"
+  level: "DEBUG"
   file: "logs/system.log"
   safety_log: "logs/safety_events.log"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

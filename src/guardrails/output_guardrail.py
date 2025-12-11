@@ -131,12 +131,32 @@ prompts:
         violations: List[Dict[str, Any]] = []
 
         harmful_keywords = [
-            "violent", "harmful", "dangerous", "attack",
-            "weapon", "gun", "bomb", "sex", "porn", "adult", "nsfw", "explicit",
+            "violent",
+            "harmful",
+            "dangerous",
+            "weapon",
+            "gun",
+            "firearm",
+            "ammunition",
+            "shoot",
+            "grenade",
+            "explosive",
+            "bomb",
+            "knife",
+            "suicide",
+            "self-harm",
+            "porn",
+            "pornography",
+            "adult content",
+            "nsfw",
+            "sexual content",
+            "explicit sexual content",
+            "child sexual abuse material",
+            "csam",
         ]
         lowered = text.lower()
         for keyword in harmful_keywords:
-            if keyword in lowered:
+            if re.search(rf"\b{re.escape(keyword)}\b", lowered, flags=re.IGNORECASE):
                 violations.append({
                     "validator": "harmful_content",
                     "reason": f"May contain harmful content: {keyword}",

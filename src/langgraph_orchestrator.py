@@ -172,6 +172,10 @@ class LangGraphOrchestrator:
                 final.get("response", ""), final.get("metadata", {}).get("research_findings")
             )
             if not output_check.get("safe", True):
+                self.logger.warning(
+                    "Output blocked by safety. Violations: %s",
+                    output_check.get("violations", []),
+                )
                 action = self.config.get("safety", {}).get("on_violation", {}).get("action", "refuse")
                 message = self.config.get("safety", {}).get("on_violation", {}).get(
                     "message",

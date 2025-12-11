@@ -55,6 +55,21 @@ This template provides a starting point for building a multi-agent research assi
 - Evaluation uses **dual LLM judges** (`src/evaluation/judge.py`), averaging criterion scores across the judge prompts defined in `config.yaml` under `evaluation.judges`.
 - Run modes: `python main.py --mode cli`, `python main.py --mode web`, and `python main.py --mode evaluate` (reports saved to `outputs/`).
 
+### Screenshots
+
+![Web UI Home](img/Web%20Main%20Page.jpg)
+Web UI home page for entering queries and running the workflow.
+
+![Result Page](img/Result%20Page.jpg)
+![Result Page Part 2](img/Result%20Page%20Part%202.jpg)
+Result pages showing the final answer, citations, and evaluation summary.
+
+![Agent Trace](img/Agent%20Trace.jpg)
+Agent execution trace to inspect each step’s output.
+
+![Safety Block](img/Safe%20Guard%20Blocking.jpg)
+Safety block example showing a refusal when a policy is triggered.
+
 ## Setup Instructions
 
 ### 1. Prerequisites
