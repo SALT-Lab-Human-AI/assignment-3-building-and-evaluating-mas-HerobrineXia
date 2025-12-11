@@ -39,6 +39,7 @@ Tools: web\_search (Tavily, enabled), paper\_search (Semantic Scholar, optional/
 Models: default OpenAI-compatible model (gpt-5-mini) for agents; writer max tokens configurable in \texttt{config.yaml}.
 Prompts are config-driven; researcher evidence is trimmed to control context size (1500 chars by default) to reduce overruns.
 LLM client logs empty/length errors and raises to surface failures.
+Deployment links: Streamlit demo at \url{https://herobrinexia.streamlit.app/}; code repository at \url{https://github.com/SALT-Lab-Human-AI/assignment-3-building-and-evaluating-mas-HerobrineXia}.
 
 \subsection{Control Flow}
 The LangGraph flow begins at Planner (entry node), then moves to Researcher, then Writer.
