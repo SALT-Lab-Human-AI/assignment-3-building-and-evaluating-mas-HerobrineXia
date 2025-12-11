@@ -169,5 +169,95 @@
       "cultural studies",
       "international design case studies"
     ]
+  },
+  {
+    "id": 11,
+    "query": "Summarize best practices for onboarding in mobile apps.",
+    "category": "mobile_onboarding",
+    "expected_topics": [
+      "progressive disclosure",
+      "empty states",
+      "permissions timing",
+      "personalization",
+      "clear value propositions"
+    ],
+    "ground_truth": "Effective onboarding uses progressive disclosure, educates through empty states, times permission prompts contextually, and personalizes guidance to user goals.",
+    "expected_sources": [
+      "mobile UX guidelines",
+      "case studies from successful apps",
+      "Nielsen Norman Group articles"
+    ]
+  },
+  {
+    "id": 12,
+    "query": "How should explainable recommendations be designed for e-commerce users?",
+    "category": "xai_recommendations",
+    "expected_topics": [
+      "transparency",
+      "justifications",
+      "user controls",
+      "trust calibration",
+      "feedback loops"
+    ],
+    "ground_truth": null,
+    "expected_sources": [
+      "recommender systems research",
+      "XAI HCI studies",
+      "industry UX guidelines"
+    ]
+  },
+  {
+    "id": 13,
+    "query": "Compare Wizard-of-Oz versus fully automated prototypes in HCI research.",
+    "category": "prototyping_methods",
+    "expected_topics": [
+      "fidelity trade-offs",
+      "cost and speed",
+      "user deception ethics",
+      "data quality",
+      "scalability"
+    ],
+    "ground_truth": "Wizard-of-Oz enables rapid testing of concepts before automation but raises deception concerns and limited scalability; fully automated prototypes cost more but provide realistic performance data.",
+    "expected_sources": [
+      "HCI prototyping literature",
+      "research method textbooks",
+      "case studies comparing WoZ and automation"
+    ]
+  },
+  {
+    "id": 14,
+    "query": "What accessibility considerations are unique to AR interfaces?",
+    "category": "ar_accessibility",
+    "expected_topics": [
+      "motion sensitivity",
+      "field of view and occlusion",
+      "gesture alternatives",
+      "text legibility",
+      "environmental context"
+    ],
+    "ground_truth": null,
+    "expected_sources": [
+      "AR accessibility research",
+      "WCAG adaptations for AR",
+      "industry AR design guidelines"
+    ]
+  },
+  {
+    "id": 15,
+    "query": "What methods can evaluate empathy in chatbots?",
+    "category": "chatbot_empathy",
+    "expected_topics": [
+      "self-report scales",
+      "behavioral metrics",
+      "conversation analysis",
+      "human evaluation",
+      "longitudinal trust effects"
+    ],
+    "ground_truth": "Empathy in chatbots is typically assessed via user self-report (e.g., CARE/Jefferson scales), behavioral cues (response latency/tone), expert conversation coding, and longitudinal trust or satisfaction measures.",
+    "expected_sources": [
+      "chatbot evaluation papers",
+      "empathy measurement scales",
+      "HCI studies on conversational agents"
+    ]
   }
 ]

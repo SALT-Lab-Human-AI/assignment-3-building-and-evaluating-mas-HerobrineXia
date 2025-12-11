@@ -1,6 +1,3 @@
-autogen-agentchat
-autogen-ext[openai,groq]
-
 langgraph
 langchain
 langchain-core
@@ -11,6 +8,7 @@ openai
 
 guardrails-ai
 nemoguardrails
+pbr
 
 tavily-python
 requests
@@ -35,5 +33,5 @@ black
 # Pre-commit hooks for security and code quality
 pre-commit
 detect-secrets
-gitleaks
+gitleaks-py
 bandit

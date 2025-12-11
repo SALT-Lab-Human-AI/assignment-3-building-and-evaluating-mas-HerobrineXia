@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/r1tAQ0HC)
 # Multi-Agent Research System - Assignment 3
 
 A multi-agent system for deep research on HCI topics, featuring orchestrated agents, safety guardrails, and LLM-as-a-Judge evaluation.
@@ -46,6 +47,52 @@ This template provides a starting point for building a multi-agent research assi
 ├── .env.example            # Environment variables template
 └── main.py                 # Main entry point
 ```
+
+### Implementation Notes (current)
+
+- The system now runs on **LangGraph** (`src/langgraph_orchestrator.py`) with Planner, Researcher, Writer, and Critic agents in `src/agents/`.
+- Safety uses the heuristic **SafetyManager** (`src/guardrails/safety_manager.py`) with keyword filters covering weapons/violence, self-harm, and adult/explicit content; NeMo is not required.
+- Evaluation uses **dual LLM judges** (`src/evaluation/judge.py`), averaging criterion scores across the judge prompts defined in `config.yaml` under `evaluation.judges`.
+- Run modes: `python main.py --mode cli`, `python main.py --mode web`, and `python main.py --mode evaluate` (reports saved to `outputs/`).
+
+### Screenshots
+
+![Web UI Home](img/Web%20Main%20Page.jpg)
+Web UI home page for entering queries and running the workflow.
+
+![Result Page](img/Result%20Page.jpg)
+![Result Page Part 2](img/Result%20Page%20Part%202.jpg)
+Result pages showing the final answer, citations, and evaluation summary.
+
+![Agent Trace](img/Agent%20Trace.jpg)
+Agent execution trace to inspect each step’s output.
+
+![Safety Block](img/Safe%20Guard%20Blocking.jpg)
+Safety block example showing a refusal when a policy is triggered.
+
+![LangGraph Workflow](img/langgraph-workflow.png)
+Overall flow of Planner → Researcher → Writer ↔ Critic with termination on approval or revision budget.
+
+### Quickstart Demo (end-to-end)
+- Command: `python main.py --mode web` then enter a query in the Web UI; or `python main.py --mode cli --config config.yaml` for CLI.
+- Expected: planner/researcher/writer/critic run, final answer with inline citations, safety status in metadata. Screenshots above were produced from these runs.
+
+### Evaluation (LLM-as-a-Judge)
+- Command: `python main.py --mode evaluate --config config.yaml`.
+- Uses dual judges (config `evaluation.judges`) and writes reports to `outputs/` (e.g., `outputs/evaluation_20251210_205339.json` and summary txt).
+- Latest run (2025-12-10): overall 0.860; relevance 0.988; evidence_quality 0.703; factual_accuracy 0.718; safety_compliance 1.000; clarity 0.957 (10 queries).
+- Ensure `OPENAI_API_KEY` is set; paper_search is optional/disabled by default.
+
+### Saved Artifacts (examples)
+- Full per-query evaluation: `outputs/evaluation_20251210_205339.json` (with summary `outputs/evaluation_summary_20251210_205339.txt`).
+- Prior runs: `outputs/evaluation_20251210_143240.json`, `outputs/evaluation_20251210_173219.json`.
+- Raw agent outputs and final answers are embedded in these evaluation JSON files (use as sample session artifacts).
+- Example screenshots: see `img/` section above.
+- Agent traces and safety events are visible in the UI; terminal/log traces are written to `logs/system.log` (UTF-8).
+
+### Safety Policies (heuristic)
+- Categories enforced: weapons/violence/explosives, self-harm/suicide, adult/sexual content (including CSAM), and porn/nsfw.
+- Behavior: unsafe outputs are refused with the configured message (`safety.on_violation.action: refuse`); safety events are logged and shown in the UI when triggered.
 
 ## Setup Instructions
 
@@ -191,15 +238,15 @@ This template provides the structure - you need to implement the core functional
 ### Phase 1: Core Agent Implementation
 
 1. **Implement Agent Logic** (in `src/agents/`)
-   - [ ] Complete `planner_agent.py` - Integrate LLM to break down queries
-   - [ ] Complete `researcher_agent.py` - Integrate search APIs (Tavily, Semantic Scholar)
-   - [ ] Complete `critic_agent.py` - Implement quality evaluation logic
-   - [ ] Complete `writer_agent.py` - Implement synthesis with proper citations
+   - [x] Complete `planner_agent.py` - Integrate LLM to break down queries
+   - [x] Complete `researcher_agent.py` - Integrate search APIs (Tavily, Semantic Scholar)
+   - [x] Complete `critic_agent.py` - Implement quality evaluation logic
+   - [x] Complete `writer_agent.py` - Implement synthesis with proper citations
 
 2. **Implement Tools** (in `src/tools/`)
-   - [ ] Complete `web_search.py` - Integrate Tavily or Brave API
-   - [ ] Complete `paper_search.py` - Integrate Semantic Scholar API
-   - [ ] Complete `citation_tool.py` - Implement APA citation formatting
+   - [x] Complete `web_search.py` - Integrate Tavily or Brave API
+   - [x] Complete `paper_search.py` - Integrate Semantic Scholar API
+   - [x] Complete `citation_tool.py` - Implement APA citation formatting
 
 ### Phase 2: Orchestration
 
@@ -207,39 +254,39 @@ Choose your preferred framework to implement the multi-agent system. The current
 
 
 3. **Update `orchestrator.py`**
-   - Integrate your chosen framework
-   - Implement the workflow: plan → research → write → critique → revise
-   - Add error handling
+   - [x] Integrate your chosen framework
+   - [x] Implement the workflow: plan → research → write → critique → revise
+   - [x] Add error handling
 
 ### Phase 3: Safety Guardrails
 
 4. **Implement Guardrails** (in `src/guardrails/`)
-   - [ ] Choose framework: Guardrails AI or NeMo Guardrails
-   - [ ] Define safety policies in `safety_manager.py`
-   - [ ] Implement input validation in `input_guardrail.py`
-   - [ ] Implement output validation in `output_guardrail.py`
-   - [ ] Set up safety event logging
+   - [x] Choose framework: Guardrails AI or NeMo Guardrails
+   - [x] Define safety policies in `safety_manager.py`
+   - [x] Implement input validation in `input_guardrail.py`
+   - [x] Implement output validation in `output_guardrail.py`
+   - [x] Set up safety event logging
 
 ### Phase 4: Evaluation
 
 5. **Implement LLM-as-a-Judge** (in `src/evaluation/`)
-   - [ ] Complete `judge.py` - Integrate LLM API for judging
-   - [ ] Define evaluation rubrics for each criterion
-   - [ ] Implement score parsing and aggregation
+   - [x] Complete `judge.py` - Integrate an OpenAI-compatible LLM for judging (models.judge in config)
+   - [x] Define evaluation rubrics for each criterion (config.evaluation.criteria)
+   - [x] Implement score parsing and aggregation
 
 6. **Create Test Dataset**
-   - [ ] Add more test queries to `data/example_queries.json`
-   - [ ] Define expected outputs or ground truths where possible
-   - [ ] Cover different query types and topics
+   - [x] Add more test queries to `data/example_queries.json`
+   - [x] Define expected outputs or ground truths where possible
+   - [x] Cover different query types and topics
 
 ### Phase 5: User Interface
 
 7. **Complete UI** (choose one or both)
-   - [ ] Finish CLI implementation in `src/ui/cli.py`
-   - [ ] Finish web UI in `src/ui/streamlit_app.py`
-   - [ ] Display agent traces clearly
-   - [ ] Show citations and sources
-   - [ ] Indicate safety events
+   - [x] Finish CLI implementation in `src/ui/cli.py`
+   - [x] Finish web UI in `src/ui/streamlit_app.py`
+   - [x] Display agent traces clearly
+   - [x] Show citations and sources
+   - [x] Indicate safety events
 
 ## Running the System
 

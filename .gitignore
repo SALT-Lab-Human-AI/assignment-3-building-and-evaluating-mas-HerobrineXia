@@ -212,9 +212,18 @@ logs/
 data/*.json
 data/*.csv
 !data/example_queries.json
-outputs/
 *.pkl
 *.pickle
 
 # Pre-commit
 .pre-commit-cache/
+
+# latex compiler artifacts
+*.aux
+*.fls
+*.fdb_latexmk
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.xdv
